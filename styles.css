@@ -1,0 +1,81 @@
+/* Open Runde */
+@font-face {
+  font-family: 'Open Runde';
+  src: url('/fonts/OpenRunde-Regular.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Open Runde';
+  src: url('/fonts/OpenRunde-Medium.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Open Runde';
+  src: url('/fonts/OpenRunde-Bold.woff2') format('woff2'),
+       url('/fonts/OpenRunde-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Layout */
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Open Runde', sans-serif;
+  font-weight: 400;
+  color: #333;
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  text-align: left;
+}
+
+.logo {
+  width: 96px;
+  height: 96px;
+  display: block;
+  margin-bottom: 24px;
+  border-radius: 16px;
+  background: #ddd;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+p {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.5;
+}
