@@ -2,7 +2,7 @@
 @font-face {
   font-family: 'Open Runde';
   src: url('/fonts/OpenRunde-Regular.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Regular.woff') format('woff');
+    url('/fonts/OpenRunde-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -11,7 +11,7 @@
 @font-face {
   font-family: 'Open Runde';
   src: url('/fonts/OpenRunde-Medium.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Medium.woff') format('woff');
+    url('/fonts/OpenRunde-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -20,14 +20,16 @@
 @font-face {
   font-family: 'Open Runde';
   src: url('/fonts/OpenRunde-Bold.woff2') format('woff2'),
-       url('/fonts/OpenRunde-Bold.woff') format('woff');
+    url('/fonts/OpenRunde-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 /* Reset */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -45,37 +47,125 @@ body {
   align-items: center;
   font-family: 'Open Runde', sans-serif;
   font-weight: 400;
-  color: #333;
+  color: #676767;
   background: #fff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (max-width: 768px) {
+  body {
+    align-items: flex-start;
+    padding: 32px 32px 32px 32px;
+  }
+
+  .hero {
+    flex-direction: column;
+    gap: 100px;
+  }
+
+  .logo {
+    width: 48px;
+  }
+}
+
 .container {
   width: 100%;
-  max-width: 360px;
+  max-width: 560px;
   padding: 24px;
   text-align: left;
 }
 
+.hero {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
 .logo {
-  width: 96px;
-  height: 96px;
-  display: block;
-  margin-bottom: 24px;
-  border-radius: 16px;
-  background: #ddd;
+  width: 72px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
 }
 
 h1 {
-  font-weight: 700;
-  font-size: 28px;
-  line-height: 1.2;
-  margin-bottom: 8px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 p {
   font-weight: 500;
   font-size: 16px;
   line-height: 1.5;
+}
+
+@media (min-width: 769px) {
+  .container {
+    text-align: center;
+  }
+
+  .hero {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  p {
+    font-size: 14px;
+  }
+}
+
+p+p {
+  margin-top: 16px;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.link-plots {
+  color: #08A24B;
+}
+
+.link-email {
+  color: inherit;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  margin-left: 4px;
+  border-radius: 16px;
+  vertical-align: middle;
+  border: 0.5px solid currentColor;
+}
+
+.tag-beta {
+  background: transparent;
+  color: #08A24B;
+  border-color: #08A24B;
 }
