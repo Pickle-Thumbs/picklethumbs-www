@@ -72,7 +72,6 @@ body {
 .container {
   width: 100%;
   max-width: 560px;
-  padding: 24px;
   text-align: left;
 }
 
@@ -109,6 +108,7 @@ p {
   font-weight: 500;
   font-size: 16px;
   line-height: 1.5;
+  text-wrap: pretty;
 }
 
 @media (min-width: 769px) {
@@ -150,6 +150,26 @@ a:hover {
 
 .link-email {
   color: inherit;
+}
+
+.footer-links {
+  position: fixed;
+  bottom: 32px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spacer {
+  color: inherit;
+}
+
+@media (min-width: 769px) {
+  .footer-links {
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .tag {
