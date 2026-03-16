@@ -33,6 +33,13 @@ const PREVIEW_FOLLOW_EASE      = "elastic.out(1, 0.4)";
 const PREVIEW_POP_DURATION     = 0.8;     // elastic pop-in duration
 const PREVIEW_POP_EASE         = "elastic.out(1, 0.6)";  // higher period = floatier
 
+// Plots preview — bed sway on move
+const SWAY_MAX_DEG             = 14;      // max tilt in degrees
+const SWAY_VELOCITY_FACTOR     = 8;       // faster = more sway (speed in px/ms → degrees)
+const SWAY_SETTLE_DURATION     = 0.7;     // settle back to zero
+const SWAY_SETTLE_EASE         = "elastic.out(1, 0.5)";  // rocking overshoot
+const SWAY_SETTLE_DELAY        = 80;      // ms of no movement before settling
+
 // Plots preview — snake animation
 const SNAKE_BEAT               = 800;     // ms between each step
 const SNAKE_SLIDE_DURATION     = 0.2;     // seconds per slide in/out
@@ -192,20 +199,37 @@ function initPlotsPreview() {
   const preview = document.createElement("div");
   preview.className = "link-preview";
 
+  const sway = document.createElement("div");
+  sway.className = "link-preview-sway";
+
+  const content = document.createElement("div");
+  content.className = "link-preview-content";
+
   const bg = document.createElement("img");
   bg.className = "link-preview-bg";
   bg.src = "/images/plots-bed.png";
   bg.alt = "";
-  preview.appendChild(bg);
+  content.appendChild(bg);
 
   const grid = document.createElement("div");
   grid.className = "link-preview-grid";
-  preview.appendChild(grid);
+  content.appendChild(grid);
 
+  sway.appendChild(content);
+  preview.appendChild(sway);
+
+  const LETTER_CELLS = { 0: "P", 1: "L", 4: "O", 5: "T", 8: "S" };
   const cells = [];
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement("div");
     cell.className = "link-preview-cell";
+    const letter = LETTER_CELLS[i];
+    if (letter !== undefined) {
+      const span = document.createElement("span");
+      span.className = "link-preview-letter";
+      span.textContent = letter;
+      cell.appendChild(span);
+    }
     const img = document.createElement("img");
     img.className = "link-preview-plant";
     img.alt = "";
@@ -217,7 +241,7 @@ function initPlotsPreview() {
 
   document.body.appendChild(preview);
 
-  gsap.set(preview, { xPercent: -50, yPercent: -100, transformOrigin: "50% 100%" });
+  gsap.set(preview, { xPercent: -50, yPercent: -100, transformOrigin: "50% 100%" }); // anchor: bottom center
 
   // --- Cursor follow ---
   let leftTo, topTo;
@@ -225,6 +249,45 @@ function initPlotsPreview() {
   function initFollow() {
     leftTo = gsap.quickTo(preview, "left", { duration: PREVIEW_FOLLOW_DURATION, ease: PREVIEW_FOLLOW_EASE });
     topTo  = gsap.quickTo(preview, "top",  { duration: PREVIEW_FOLLOW_DURATION, ease: PREVIEW_FOLLOW_EASE });
+  }
+
+  // --- Bed sway (velocity-based rotation, settles with rocking) ---
+  let swaySettleTimer = null;
+  let prevMouseX = null, prevMouseY = null, prevMouseT = null;
+  let lastClientX = 0, lastClientY = 0;
+  const swayRotTo = gsap.quickTo(preview, "rotation", { duration: 0.15, ease: "power2.out" });
+
+  function updateSway(clientX, clientY) {
+    const now = performance.now();
+    const dt = Math.max(now - (prevMouseT ?? now), 8);
+    const dx = clientX - (prevMouseX ?? clientX);
+    const dy = clientY - (prevMouseY ?? clientY);
+    prevMouseX = clientX;
+    prevMouseY = clientY;
+    prevMouseT = now;
+
+    const speed = Math.sqrt(dx * dx + dy * dy) / dt;
+    const magnitude = Math.min(speed * SWAY_VELOCITY_FACTOR, SWAY_MAX_DEG);
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const rotation = (dx / len) * magnitude; // left/right sway from movement direction
+
+    swayRotTo(rotation);
+
+    clearTimeout(swaySettleTimer);
+    swaySettleTimer = setTimeout(() => {
+      gsap.to(preview, {
+        rotation: 0,
+        duration: SWAY_SETTLE_DURATION,
+        ease: SWAY_SETTLE_EASE,
+      });
+    }, SWAY_SETTLE_DELAY);
+  }
+
+  function resetSway() {
+    clearTimeout(swaySettleTimer);
+    swaySettleTimer = null;
+    prevMouseX = prevMouseY = prevMouseT = null;
+    gsap.set(preview, { rotation: 0 });
   }
 
   // --- Garden bed shadow ---
@@ -318,6 +381,38 @@ function initPlotsPreview() {
   }
 
   // --- Hover wiring ---
+  function isInLinkOrPreview(x, y) {
+    const inLink = [...links].some((link) => {
+      const r = link.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    });
+    const r = preview.getBoundingClientRect();
+    const inPreview = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    return inLink || inPreview;
+  }
+
+  function hidePreview() {
+    stopLoop();
+    resetSway();
+    document.removeEventListener("mousemove", docMoveHandler);
+    gsap.killTweensOf(preview);
+    gsap.killTweensOf(bedShadow);
+    Object.assign(bedShadow, SHADOW_ZERO);
+    applyBedShadow();
+    gsap.set(preview, { display: "none", opacity: 0, scale: 0, y: 0 });
+    const siblings = document.querySelectorAll(".intro p");
+    gsap.to(siblings, { opacity: 1, duration: DIM_DURATION, ease: "power2.out" });
+  }
+
+  function docMoveHandler(e) {
+    lastClientX = e.clientX;
+    lastClientY = e.clientY;
+    leftTo(e.clientX);
+    topTo(e.clientY - PREVIEW_GAP);
+    updateSway(e.clientX, e.clientY);
+    if (!isInLinkOrPreview(e.clientX, e.clientY)) hidePreview();
+  }
+
   links.forEach((link) => {
     const parentP = link.closest("p");
     const siblings = document.querySelectorAll(".intro p");
@@ -326,29 +421,25 @@ function initPlotsPreview() {
     link.addEventListener("mouseenter", (e) => {
       Object.assign(bedShadow, SHADOW_ZERO);
       applyBedShadow();
+      prevMouseX = lastClientX = e.clientX;
+      prevMouseY = lastClientY = e.clientY;
+      prevMouseT = performance.now();
       gsap.set(preview, { left: e.clientX, top: e.clientY - PREVIEW_GAP, y: PREVIEW_GAP, display: "block", scale: 0, opacity: 0 });
+      gsap.set(preview, { rotation: 0 });
       initFollow();
       gsap.to(preview, { y: 0, opacity: 1, scale: 1, duration: PREVIEW_POP_DURATION, ease: PREVIEW_POP_EASE });
       gsap.to(bedShadow, { ...SHADOW_HOVER, duration: PREVIEW_POP_DURATION, ease: "power2.out", onUpdate: applyBedShadow });
       gsap.to(dimTargets, { opacity: DIM_OPACITY, duration: DIM_DURATION, ease: "power2.out" });
       startLoop();
-    });
-
-    link.addEventListener("mousemove", (e) => {
-      leftTo(e.clientX);
-      topTo(e.clientY - PREVIEW_GAP);
+      document.addEventListener("mousemove", docMoveHandler);
     });
 
     link.addEventListener("mouseleave", () => {
-      stopLoop();
-      gsap.killTweensOf(preview);
-      gsap.killTweensOf(bedShadow);
-      Object.assign(bedShadow, SHADOW_ZERO);
-      applyBedShadow();
-      gsap.set(preview, { display: "none", opacity: 0, scale: 0, y: 0 });
-      gsap.to(dimTargets, { opacity: 1, duration: DIM_DURATION, ease: "power2.out" });
+      if (!isInLinkOrPreview(lastClientX, lastClientY)) hidePreview();
     });
   });
+
+  document.documentElement.addEventListener("mouseleave", hidePreview);
 }
 
 // ===========================================================================
